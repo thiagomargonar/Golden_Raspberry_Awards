@@ -3,6 +3,7 @@ package outsera.prova.services.loadcsv;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import outsera.prova.exceptions.ResourceWithProblem;
 import outsera.prova.models.Movies;
 import outsera.prova.models.Producers;
 import outsera.prova.models.Studios;
@@ -61,11 +62,11 @@ public class LoadCsv implements CommandLineRunner {
                     saveMovie(movie);
                 }
 
-                System.out.println("CSV carregado com sucesso!");
+                System.out.println("CSV loader success");
 
             }
         } catch (Exception e) {
-            System.err.println("Erro ao carregar CSV: " + e.getMessage());
+            throw new ResourceWithProblem("Problem with loading of CSV");
         }
     }
 
