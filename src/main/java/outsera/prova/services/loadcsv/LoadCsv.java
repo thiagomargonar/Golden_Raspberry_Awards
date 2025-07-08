@@ -56,7 +56,7 @@ public class LoadCsv implements CommandLineRunner {
                     movie.setTitle(fields[1].trim());
                     movie.setStudios(getStudioByField(fields[2].trim()));
                     movie.setProducers(getProducerByField(fields[3].trim()));
-                    movie.setWinner(Boolean.parseBoolean(fields[4]));
+                    movie.setWinner("yes".equalsIgnoreCase(fields[4].trim()));
 
                     saveMovie(movie);
                 }
@@ -71,27 +71,37 @@ public class LoadCsv implements CommandLineRunner {
 
     private void saveMovie(Movies movie) {
         Producers producers = getOrSaveProducer(movie.getProducers());
-        List<Studios> studios = getOrSaveStudios(movie.getStudios());
+        List<Studios> studios = getStudios(movie.getStudios());
         movie.setStudios(studios);
         movie.setProducers(producers);
         moviesRep.save(movie);
     }
 
-    private List<Studios> getOrSaveStudios(List<Studios> studios) {
+    private List<Studios> getStudios(List<Studios> studios) {
         List<Studios> studiosList = new ArrayList<>();
 
         for (Studios studio : studios) {
-            Optional<Studios> existing = studiosRep.findFirstByName(studio.getName());
+            String[] nomes = studio.getName().split(",");
+
+            getOrSaveStudios(studiosList, nomes);
+        }
+
+        return studiosList;
+    }
+
+    private void getOrSaveStudios(List<Studios> studiosList, String[] nomes) {
+        for (String nome : nomes) {
+            Optional<Studios> existing = studiosRep.findFirstByName(nome);
 
             if (existing.isPresent()) {
                 studiosList.add(existing.get());
             } else {
-                Studios saved = studiosRep.save(studio);
+                Studios stu = new Studios();
+                stu.setName(nome);
+                Studios saved = studiosRep.save(stu);
                 studiosList.add(saved);
             }
         }
-
-        return studiosList;
     }
 
     private Producers getOrSaveProducer(Producers producers) {
