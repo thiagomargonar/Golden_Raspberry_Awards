@@ -2,6 +2,8 @@ package outsera.prova.models;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "movies")
 public class Movies {
@@ -12,8 +14,22 @@ public class Movies {
     @Column(name = "year_of")
     private int year;
     private String title;
-    private String studios;
-    private String producers;
+
+    @ManyToMany(cascade = CascadeType.MERGE)
+    @JoinTable(
+            name = "movie_studio",
+            joinColumns = @JoinColumn(name = "movie_id"),
+            inverseJoinColumns = @JoinColumn(name = "studio_id")
+    )
+    private List<Studios> studios;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "producer_id")
+    private Producers producers;
+
+    public Movies() {
+    }
+
     private boolean winner;
 
     public Long getId() {
@@ -40,19 +56,12 @@ public class Movies {
         this.title = title;
     }
 
-    public String getStudios() {
-        return studios;
-    }
 
-    public void setStudios(String studios) {
-        this.studios = studios;
-    }
-
-    public String getProducers() {
+    public Producers getProducers() {
         return producers;
     }
 
-    public void setProducers(String producers) {
+    public void setProducers(Producers producers) {
         this.producers = producers;
     }
 
@@ -62,5 +71,13 @@ public class Movies {
 
     public void setWinner(boolean winner) {
         this.winner = winner;
+    }
+
+    public List<Studios> getStudios() {
+        return studios;
+    }
+
+    public void setStudios(List<Studios> studios) {
+        this.studios = studios;
     }
 }

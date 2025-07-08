@@ -4,19 +4,32 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import outsera.prova.models.Movies;
+import outsera.prova.models.Producers;
+import outsera.prova.models.Studios;
 import outsera.prova.repositories.movies.MoviesRep;
+import outsera.prova.repositories.producers.ProducersRep;
+import outsera.prova.repositories.studios.StudiosRep;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class LoadCsv implements CommandLineRunner {
 
-    private final MoviesRep repository;
+    private final MoviesRep moviesRep;
 
-    public LoadCsv(MoviesRep repository) {
-        this.repository = repository;
+    private final ProducersRep producersRep;
+
+    private final StudiosRep studiosRep;
+
+    public LoadCsv(MoviesRep moviesRep, ProducersRep producersRep, StudiosRep studiosRep) {
+        this.moviesRep = moviesRep;
+        this.producersRep = producersRep;
+        this.studiosRep = studiosRep;
     }
 
     @Override
@@ -36,24 +49,74 @@ public class LoadCsv implements CommandLineRunner {
                         continue;
                     }
 
-                    String[] fields = line.split(";", -1); // -1 mantém campos vazios
+                    String[] fields = line.split(";", -1);
 
                     Movies movie = new Movies();
                     movie.setYear(Integer.parseInt(fields[0].trim()));
                     movie.setTitle(fields[1].trim());
-                    movie.setStudios(fields[2].trim());
-                    movie.setProducers(fields[3].trim());
-                    movie.setWinner(fields[4].trim().equalsIgnoreCase("yes"));
+                    movie.setStudios(getStudioByField(fields[2].trim()));
+                    movie.setProducers(getProducerByField(fields[3].trim()));
+                    movie.setWinner(Boolean.parseBoolean(fields[4]));
 
-                    repository.save(movie);
+                    saveMovie(movie);
                 }
 
-                System.out.println("✅ CSV carregado com sucesso!");
+                System.out.println("CSV carregado com sucesso!");
 
             }
         } catch (Exception e) {
-            System.err.println("❌ Erro ao carregar CSV: " + e.getMessage());
+            System.err.println("Erro ao carregar CSV: " + e.getMessage());
         }
+    }
+
+    private void saveMovie(Movies movie) {
+        Producers producers = getOrSaveProducer(movie.getProducers());
+        List<Studios> studios = getOrSaveStudios(movie.getStudios());
+        movie.setStudios(studios);
+        movie.setProducers(producers);
+        moviesRep.save(movie);
+    }
+
+    private List<Studios> getOrSaveStudios(List<Studios> studios) {
+        List<Studios> studiosList = new ArrayList<>();
+
+        for (Studios studio : studios) {
+            Optional<Studios> existing = studiosRep.findFirstByName(studio.getName());
+
+            if (existing.isPresent()) {
+                studiosList.add(existing.get());
+            } else {
+                Studios saved = studiosRep.save(studio);
+                studiosList.add(saved);
+            }
+        }
+
+        return studiosList;
+    }
+
+    private Producers getOrSaveProducer(Producers producers) {
+        Optional<Producers> producer = producersRep
+                .findFirstByName(producers.getName());
+
+        if(producer.isPresent()){
+            return producer.get();
+        }
+
+        return producersRep.save(producers);
+    }
+
+    private Producers getProducerByField(String trim) {
+        Producers producers = new Producers();
+        producers.setName(trim);
+        return producers;
+    }
+
+    private List<Studios> getStudioByField(String name) {
+        Studios studios = new Studios();
+
+        studios.setName(name);
+
+        return List.of(studios);
     }
 }
 

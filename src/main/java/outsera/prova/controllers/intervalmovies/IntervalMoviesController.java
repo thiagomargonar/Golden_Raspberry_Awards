@@ -18,7 +18,7 @@ public class IntervalMoviesController {
     }
 
     @GetMapping
-    public List<WorstsProducersDTO> getAll() {
+    public WorstsProducersDTO getAll() {
         return intervalMoviesServ.findAll();
     }
 }

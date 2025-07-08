@@ -16,9 +16,11 @@ public class IntervalMoviesServ {
         this.moviesRep = moviesRep;
     }
 
-    public List<WorstsProducersDTO> findAll() {
+    public WorstsProducersDTO findAll() {
         List<Movies> movies = moviesRep.findAll();
 
         return null;
     }
+
+
 }
